@@ -23,16 +23,16 @@ import numpy as np
 
 class Floatplane:
 
-    def __init__(self, MTOW, concept, floats):
+    def __init__(self, MTOW, wing_A, concept, floats):
         self.m = MTOW  # Mass
         self.W = self.m * 9.8  # Weight
         self.B = floats['beam']  # Float Beam
         self.Len = floats['length']  # Float Length
         self.rho = 1.2  # Air Density
         self.rho_w = 1025  # Water Density
-        self.C_l = 1.5  # concept.clto
-        self.C_d = 0.09  # concept.cdto
-        self.S_T = 1.2  # concept.wingarea_m2
+        self.C_l = concept.performance['CLmaxTO']
+        self.C_d = concept.performance['CDTO']
+        self.S_T = wing_A
         self.a_t1 = floats['trim_start']  # Starting Trim Angle
         self.a_t2 = floats['trim_end']  # End Trim Angle
         self.AoI = 4.5  # Wing angle of incidence with Keel
@@ -73,8 +73,8 @@ class Floatplane:
             #    R = 0
             # R_fr = 2*0.012*S_wet*v**2
             # R_frs.append(R_fr)
-            if v < 2:
-                R = 4
+            if v < 30:
+                R = 3000
             else:
                 R = 0.0103 * v ** 3 - 0.0686 * v ** 2 + 3.101 * v - 2.392
             R = 2 * R
