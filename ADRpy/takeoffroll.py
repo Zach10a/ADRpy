@@ -11,11 +11,10 @@ This module contains tools for calculating the takeoff roll distance of an aircr
 both on land and water. It also contains tools to help find float displacements given
 a simple float design.
 
-Original code seed by Tom Smith
-
 """
 
 __author__ = "Zach Tait"
+# Other contributors: Tom Smith
 
 import matplotlib.pyplot as plt
 import numpy as np
