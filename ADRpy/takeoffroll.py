@@ -134,15 +134,15 @@ class Ground:
         self.mu_r = concept.performance['mu_R']
         self.ar = concept.design['aspectratio']
 
-    def TakeOffRun(self, t_int, T):
+    def TakeOffRun(self, t_int, T2W):
         t = 0  # Starting Time
+        T = T2W * self.W
         v = 0  # Starting Velocity
         rho = 1.225  # Air Density
         wind_speed = 0  # Wind Speed
         e = 0.961
         S = self.S_T
-        a_t1 = 6 * (np.pi / 180)  # Starting Trim Angle
-
+        a_t1 = np.deg2rad(6) # Starting Trim Angle
         C_l_0 = self.a_0i * np.deg2rad(self.AoI)
         C_D0 = 0.02
         d = 0  # Starting Distance
@@ -153,7 +153,7 @@ class Ground:
             t_s.append(t)
             d_s.append(d)
             v_s.append(v)
-            C_l = C_l_0 + (np.deg2rad(a_t1) * self.a_0i)
+            C_l = C_l_0
             L = 0.5 * rho * v * v * S * C_l
             L_s.append(L)
             C_Di = C_l ** 2 / (np.pi * self.ar * e)
@@ -169,7 +169,7 @@ class Ground:
             d = d + v * t_int + a * t_int ** 2
             v = v + a * t_int
             t = t + t_int
-            if t > 100:
+            if t > 1000:
                 break
 
         W_s = []
@@ -180,5 +180,6 @@ class Ground:
                      'lift': L_s,
                      'drag': D_s,
                      'resistance': F_r_s,
-                     'weight': W_s}
+                     'weight': W_s,
+                     'distance': d_s}
         return ground_to
