@@ -14,6 +14,7 @@ a simple float design.
 """
 
 __author__ = "Zach Tait"
+
 # Other contributors: Tom Smith
 
 import matplotlib.pyplot as plt
@@ -118,46 +119,53 @@ class Floatplane:
     # print(H, Flt_x[2])
 
 
-class Wheels:
-    def TakeOffRun(t_int, T):
-        m = 7  # Mass
-        W = m * 9.8  # Weight
+class Ground:
+    def __init__(self, MTOW, w_area, num_wheels, concept):
+        self.m = MTOW  # Mass
+        self.W = self.m * 9.8  # Weight
+        self.rho = 1.2  # Air Density
+        self.rho_w = 1025  # Water Density
+        self.C_l = concept.performance['CLmaxTO']
+        self.C_d = concept.performance['CDTO']
+        self.S_T = w_area
+        self.AoI = 4.5  # Wing angle of attack at rest
+        self.num = num_wheels
+        self.a_0i = concept.performance['CLslope']
+        self.mu_r = concept.performance['mu_R']
+        self.ar = concept.design['aspectratio']
+
+    def TakeOffRun(self, t_int, T):
         t = 0  # Starting Time
         v = 0  # Starting Velocity
         rho = 1.225  # Air Density
-        rho_w = 1025  # Water Density
         wind_speed = 0  # Wind Speed
-        AR = 6.686
         e = 0.961
-        S = 1
+        S = self.S_T
         a_t1 = 6 * (np.pi / 180)  # Starting Trim Angle
 
-        def C_l(a):
-            return 4.745 * a + 0.33
-
-        C_l_0 = C_l(a_t1)
+        C_l_0 = self.a_0i * np.deg2rad(self.AoI)
         C_D0 = 0.02
-        C_Di = C_l_0 ** 2 / (np.pi * AR * e)
         d = 0  # Starting Distance
-        t_s, d_s, v_s, L_s, D_s, F_R_s = [], [], [], [], [], [],
-        while v < 15:
+        t_s, d_s, v_s, L_s, D_s, F_r_s = [], [], [], [], [], []
+        L = 0
+        while (L - self.W) < 0:
             # Calculate all the forces
             t_s.append(t)
             d_s.append(d)
             v_s.append(v)
-            C_l = 4.745 * a_t1 + 0.33
+            C_l = C_l_0 + (np.deg2rad(a_t1) * self.a_0i)
             L = 0.5 * rho * v * v * S * C_l
             L_s.append(L)
-            C_Di = C_l ** 2 / (np.pi * AR * e)
+            C_Di = C_l ** 2 / (np.pi * self.ar * e)
             C_d = C_Di + C_D0
             D = 0.5 * rho * v * v * S * C_d
             D_s.append(D)
-            F_R = 0.1 * (W - L)  # Rolling Resistance
-            if F_R < 0:
-                F_R = 0
-            F_R_s.append(F_R)
-            F_net = T - D - F_R
-            a = F_net / m
+            F_r = self.mu_r * (self.W - L) * self.num # Rolling Resistance
+            if F_r < 0:
+                F_r = 0
+            F_r_s.append(F_r)
+            F_net = T - D - F_r
+            a = F_net / self.m
             d = d + v * t_int + a * t_int ** 2
             v = v + a * t_int
             t = t + t_int
@@ -166,21 +174,11 @@ class Wheels:
 
         W_s = []
         for i in range(len(t_s)):
-            W_s.append(W)
-
-        plt.plot(t_s, v_s, label='Velocity [m/s]')
-        plt.plot(t_s, L_s, label='Lift [N]')
-        plt.plot(t_s, D_s, label='Drag[N]')
-        plt.plot(t_s, F_R_s, label='Rolling Resistance Resistance[N]')
-        plt.plot(t_s, W_s, label='Weight[N]')
-        plt.xlabel('Time[s]')
-
-        # plt.plot(v_s, D_s, label='Drag[N]')
-        # plt.plot(v_s, R_s, label='Water Resistance[N]')
-        # plt.plot(v_s, R_frs, label='Hydroplaning Resistance [N]')
-        # plt.xlabel('Velocity[m/s]')
-
-        plt.legend()
-        plt.grid()
-        plt.title('Take Off Run with a Thrust of ' + str(T) + 'N')
-        plt.show()
+            W_s.append(self.W)
+        ground_to = {'time': t_s,
+                     'velocity': v_s,
+                     'lift': L_s,
+                     'drag': D_s,
+                     'resistance': F_r_s,
+                     'weight': W_s}
+        return ground_to
